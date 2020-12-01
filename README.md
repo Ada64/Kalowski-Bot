@@ -4,3 +4,6 @@ discord
 discord.py
 python3 is recommended!
 https://python.org -- install python
+
+made by browniie
+keep uwuing gamers

@@ -231,4 +231,4 @@ async def hack(ctx):
   await ctx.send('rick rolled')
   await ctx.send('https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825')
 
-bot.run("Nzc3OTE1ODQxMDI2NDU3NjQw.X7KYlQ.wKZrGyQssRMPAW5ncBwrmoOobpk")
+bot.run("your token here")

@@ -7,3 +7,4 @@ https://python.org -- install python
 
 made by browniie
 keep uwuing gamers
+(if ur lazy u can just do pip install requirements.txt)

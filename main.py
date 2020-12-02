@@ -168,7 +168,6 @@ async def yomama(ctx):
 'Yo mama so stupid, she stared at a cup of orange juice for 12 hours because it said concentrate.',
 'Yo mama so stupid when they said it was chilly outside, she grabbed a bowl.',
 'Yo mama so stupid, she put lipstick on her forehead to make up her mind.',
-'Yo mama so stupid, when they said she asked for fries and a shake.',
 'Yo mama so stupid, she thought a quarterback was a refund.',
 'Yo mama so stupid, she got hit by a parked car.',
 'Yo mama so stupid, when I told her that she lost her mind, she went looking for it',
@@ -230,5 +229,35 @@ async def createchannel(ctx, channelName):
 async def hack(ctx):
   await ctx.send('rick rolled')
   await ctx.send('https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825')
+@bot.command(aliases=['githubb'])
+async def github(ctx):
+  await ctx.send('https://github.com/Ada64/kee')
+@bot.command(aliases=['polll'])
+async def poll(ctx,*,message):
+  emb=discord.Embed(title=f"Poll by {ctx.author.name}", description=f'{message}')
+  msg=await ctx.send(embed=emb)
+  await msg.add_reaction('👍')
+  await msg.add_reaction('👎')
+@bot.command(aliases=['serverinfoo'])
+async def serverinfo(ctx):
+  mbed = discord.Embed(
+    color=discord.Color(0xffff),
+    title=f'{ctx.guild.name}'
+  )
+  mbed.set_thumbnail(url=f'{ctx.guild.icon_url}')
+  mbed.add_field(name='Region', value=f'`{ctx.guild.region}`')
+  mbed.add_field(name='Member Count', value=f'{ctx.guild.member_count}')
+  mbed.set_footer(icon_url=f'{ctx.guild.icon_url}', text=f'Guild ID: {ctx.guild.id}')
+  await ctx.send(embed=mbed)
+@bot.command(aliases=['av'])
+async def avatar(ctx, user: discord.Member):
+  mbed = discord.Embed(
+    color=discord.Color(0xffff),
+    title=f'{user}'
 
-bot.run("your token here")
+    )
+  mbed.set_image(url=f'{user.avatar_url}')
+  await ctx.send(embed=mbed)
+  print("Avatar generated")
+  
+bot.run("bot token")

@@ -258,6 +258,5 @@ async def avatar(ctx, user: discord.Member):
     )
   mbed.set_image(url=f'{user.avatar_url}')
   await ctx.send(embed=mbed)
-  print("Avatar generated")
   
 bot.run("bot token")

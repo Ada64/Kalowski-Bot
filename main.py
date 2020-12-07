@@ -7,13 +7,10 @@ bot = commands.Bot(command_prefix=".")
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=discord.Activity(
-        type=discord.ActivityType.watching, name=f'{len(bot.guilds)} servers | .help'
+        type=discord.ActivityType.playing, name='Merry X-Mas! | .help'
     ))
     print("Notification | Bot has been turned on!")
 
-@bot.command()
-async def monkei(ctx):
-    await ctx.send("clown monkei")
 
 @bot.command(aliases=['askk'])
 async def ask(ctx, *, question):
@@ -231,7 +228,7 @@ async def hack(ctx):
   await ctx.send('https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825')
 @bot.command(aliases=['githubb'])
 async def github(ctx):
-  await ctx.send('https://github.com/Ada64/kee')
+  await ctx.send('https://github.com/Ada64/Kalowski-Bot')
 @bot.command(aliases=['polll'])
 async def poll(ctx,*,message):
   emb=discord.Embed(title=f"Poll by {ctx.author.name}", description=f'{message}')
@@ -258,5 +255,54 @@ async def avatar(ctx, user: discord.Member):
     )
   mbed.set_image(url=f'{user.avatar_url}')
   await ctx.send(embed=mbed)
-  
-bot.run("bot token")
+@bot.command(aliases=['membercount'])
+async def members(ctx):
+  mbed = discord.Embed(
+    color=discord.Color(0xffff),
+    title=f'{ctx.guild.name}'
+  )
+  mbed.set_thumbnail(url=f'{ctx.guild.icon_url}')
+  mbed.add_field(name='Member Count', value=f'{ctx.guild.member_count}')
+  mbed.set_footer(icon_url=f'{ctx.guild.icon_url}',text=f'Guild ID: {ctx.guild.id}')
+  await ctx.send(embed=mbed)
+@bot.command(aliases=['kickk'])
+async def kick(ctx, member: discord.Member, *, reason=None):
+  if ctx.author.guild_permissions.kick_members:
+   await member.kick(reason=reason)
+  await ctx.send(f'Kicked {member}.')
+@bot.command(aliases=['bann'])
+async def ban(ctx, member: discord.Member, *, reason=None):
+  if ctx.author.guild_permissions.ban_members:
+   await member.ban(reason=reason)
+  await ctx.send(f'Banned {member}.')
+@bot.command(aliases=['unbann'])
+async def unban(ctx, *, member):
+  banned_users = await ctx.guild.bans()
+  member_name, member_discriminator = member.split('#')
+
+  for ban_entry in banned_users:
+    user = ban_entry.user
+
+    if (user.name, user.discriminator) == (member_name, member_discriminator):
+      await ctx.guild.unban(user)
+      await ctx.send(f'Unbanned {user.mention}.')
+      return
+@bot.command(aliases=['dicerolll'])
+async def diceroll(ctx):
+    responses = ['You rolled a 1!',
+    'You rolled a 2!',
+    'You rolled a 3!',
+    'You rolled a 4!',
+    'You rolled a 5!',
+    'You rolled a 6!',
+    'You rolled a 7!',
+    'You rolled a 8!',
+    'You rolled a 9!']
+    mbed = discord.Embed(
+        title = 'Dice Rolled!',
+        description = f'{random.choice(responses)}'
+    )
+    mbed.set_thumbnail(url='https://images-ext-2.discordapp.net/external/kAegJWUTO1muMX0U5mEKgKSmpHuNl4it6086g2F3pCw/https/gilkalai.files.wordpress.com/2017/09/dice.png?width=80&height=77')
+    await ctx.send(embed=mbed)
+
+bot.run("token")

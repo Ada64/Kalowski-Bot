@@ -287,7 +287,7 @@ async def unban(ctx, *, member):
       await ctx.guild.unban(user)
       await ctx.send(f'Unbanned {user.mention}.')
       return
-@bot.command(aliases=['dicerolll'])
+@bot.command(aliases=['dicerolle'])
 async def diceroll(ctx):
     responses = ['You rolled a 1!',
     'You rolled a 2!',

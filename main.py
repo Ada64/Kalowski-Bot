@@ -277,6 +277,7 @@ async def ban(ctx, member: discord.Member, *, reason=None):
   await ctx.send(f'Banned {member}.')
 @bot.command(aliases=['unbann'])
 async def unban(ctx, *, member):
+     if ctx.author.guild_permissions.ban_members:
   banned_users = await ctx.guild.bans()
   member_name, member_discriminator = member.split('#')
 

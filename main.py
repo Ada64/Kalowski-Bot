@@ -270,24 +270,6 @@ async def kick(ctx, member: discord.Member, *, reason=None):
   if ctx.author.guild_permissions.kick_members:
    await member.kick(reason=reason)
   await ctx.send(f'Kicked {member}.')
-@bot.command(aliases=['bann'])
-async def ban(ctx, member: discord.Member, *, reason=None):
-  if ctx.author.guild_permissions.ban_members:
-   await member.ban(reason=reason)
-  await ctx.send(f'Banned {member}.')
-@bot.command(aliases=['unbann'])
-async def unban(ctx, *, member):
-     if ctx.author.guild_permissions.ban_members:
-  banned_users = await ctx.guild.bans()
-  member_name, member_discriminator = member.split('#')
-
-  for ban_entry in banned_users:
-    user = ban_entry.user
-
-    if (user.name, user.discriminator) == (member_name, member_discriminator):
-      await ctx.guild.unban(user)
-      await ctx.send(f'Unbanned {user.mention}.')
-      return
 @bot.command(aliases=['dicerolll'])
 async def diceroll(ctx):
     responses = ['You rolled a 1!',
@@ -305,5 +287,4 @@ async def diceroll(ctx):
     )
     mbed.set_thumbnail(url='https://images-ext-2.discordapp.net/external/kAegJWUTO1muMX0U5mEKgKSmpHuNl4it6086g2F3pCw/https/gilkalai.files.wordpress.com/2017/09/dice.png?width=80&height=77')
     await ctx.send(embed=mbed)
-
-bot.run("token")
+bot.run("Nzg3MDE3NTA0NDc1ODQwNTUy.X9O1Kw.JNKWcFP-qkuL_6T9ByJ8adoME7w")

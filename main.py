@@ -287,4 +287,4 @@ async def diceroll(ctx):
     )
     mbed.set_thumbnail(url='https://images-ext-2.discordapp.net/external/kAegJWUTO1muMX0U5mEKgKSmpHuNl4it6086g2F3pCw/https/gilkalai.files.wordpress.com/2017/09/dice.png?width=80&height=77')
     await ctx.send(embed=mbed)
-bot.run("Nzg3MDE3NTA0NDc1ODQwNTUy.X9O1Kw.JNKWcFP-qkuL_6T9ByJ8adoME7w")
+bot.run("token")

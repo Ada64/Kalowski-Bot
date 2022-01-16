@@ -1,293 +1,265 @@
-import discord
-from discord.ext import commands
-import random
+import discord, os, keep_alive, json, asyncio, aiofiles
+from discord.ext import commands, tasks
+from keep_alive import keep_alive
+from replit import db
 import requests
+import aiohttp
 import datetime
 import time
-import json
-import aiohttp
 
-
-
-
-
-
-
-
-
-bot = commands.Bot(command_prefix=";")
-bot.remove_command('help')
 start_time = time.time()
 
-@bot.event
+intents = discord.Intents.default()
+intents.members = True
+client = commands.Bot(command_prefix=commands.when_mentioned_or('+'), intents=intents)
+client.remove_command('help')
+token = os.environ.get('DISCORD_BOT_SECRET')
+client.warnings = {}
+
+@client.event
 async def on_ready():
-    await bot.change_presence(status=discord.Status.online, activity=discord.Activity(
-        type=discord.ActivityType.competing, name='a race | ;help'
-    ))
+  for guild in client.guilds:
+        client.warnings[guild.id] = {}
     
-    print("Notification | Bot has been turned on!")
-    
+        async with aiofiles.open(f"./data/{guild.id}.txt", mode="a") as temp:
+            pass
 
-    
-        
+        async with aiofiles.open(f"./data/{guild.id}.txt", mode="r") as file:
+            lines = await file.readlines()
 
+            for line in lines:
+                data = line.split(" ")
+                member_id = int(data[0])
+                admin_id = int(data[1])
+                reason = " ".join(data[2:]).strip("\n")
 
+                try:
+                    client.warnings[guild.id][member_id][0] += 1
+                    client.warnings[guild.id][member_id][1].append((admin_id, reason))
 
+                except KeyError:
+                    client.warnings[guild.id][member_id] = [1, [(admin_id, reason)]] 
 
-@bot.command()
-async def ping(ctx):
-  
-    await ctx.send(f'Pong! `{round(bot.latency * 1000)}ms`')
-    
-"""Gets the bot latency"""
-  
+  print('bot online!')
 
-
-@bot.command()
-async def members(ctx):
-  mbed = discord.Embed(
-    color=discord.Color(0xffff),
-    title=f'{ctx.guild.name}'
-  )
-  mbed.set_thumbnail(url=f'{ctx.guild.icon_url}')
-  mbed.add_field(name='Member Count', value=f'{ctx.guild.member_count}')
-  mbed.set_footer(icon_url=f'{ctx.guild.icon_url}',text=f'Guild ID: {ctx.guild.id}')
-  await ctx.send(embed=mbed)
-  
-  
-@bot.command()
-async def kick(ctx, member: discord.Member, *, reason=None):
-  """Kicks the user mentioned."""
-  if ctx.author.guild_permissions.kick_members:
-   await member.kick(reason=reason)
-  await ctx.send(f'Kicked {member}.')
-  
-  if not ctx.author.guild_permissions.kick_members:
-    await ctx.send("You do not have permission to run this command.")
-    
+  await client.change_presence(activity=discord.Activity(type=discord.ActivityType.competing, name='a food fight'))
 
 
+@client.event
+async def on_reaction_add(reaction, user):
+  if str(reaction.emoji) == "<:Retweet:846635554204287006>":
+    if reaction.count >= 4:
+      try:
+        print(db["rt"][str(reaction.message.id)])
+      except KeyError:
+        channel = client.get_channel(895406253822595082)
+        embed = discord.Embed(title='Trending message', color=0xE4F5F2, url=reaction.message.jump_url)
+        embed.add_field(name='Message:', value=reaction.message.content, inline=False)
+        embed.set_author(name=reaction.message.author, icon_url=reaction.message.author.avatar_url)
+        await channel.send(content=f"{reaction.message.author.mention} your message is now trending!", embed=embed)
+        db["rt"][str(reaction.message.id)] = "yes"
 
-"""Kicks the user mentioned."""
-
-@bot.command()
-async def ban(ctx, member: discord.Member, *, reason=None):
-  """Bans the user mentioned."""
-  if ctx.author.guild_permissions.ban_members:
-   await member.ban(reason=reason)
-  await ctx.send(f'Banned {member}.')
-
-  
-  if not ctx.author.guild_permissions.ban_members:
-    await ctx.send("You do not have permission to run this command.")
-
-    
-
-@bot.command()
-async def userinfo(ctx, user: discord.Member=None):
-
-    if not user: # this command took forever to redo for the no user lol
-        embed = discord.Embed(title="Your info", color=0x176cd5)
-        embed.add_field(name="Username", value=ctx.message.author.name + "#" + ctx.message.author.discriminator, inline=True)
-        embed.add_field(name="ID", value=ctx.message.author.id, inline=True)
-        embed.add_field(name="Status", value=ctx.message.author.status, inline=True)
-        embed.add_field(name="Highest role", value=ctx.message.author.top_role)
-        embed.add_field(name="Roles", value=len(ctx.message.author.roles))
-        embed.add_field(name="Game", value=ctx.message.author.game)
-        embed.add_field(name="Joined", value=ctx.message.author.joined_at)
-        embed.add_field(name="Created", value=ctx.message.author.created_at)
-        embed.add_field(name="Bot?", value=ctx.message.author.bot)
-        embed.set_thumbnail(url=ctx.message.author.avatar_url)
-        embed.set_author(name=ctx.message.author, icon_url=ctx.message.author.avatar_url)
-        await bot.say(embed=embed)
-    
-    else:
-        embed = discord.Embed(title="{}'s info".format(user), color=0x176cd5)
-        embed.add_field(name="Username", value=user.name + "#" + user.discriminator, inline=True)
-        embed.add_field(name="ID", value=user.id, inline=True)
-        embed.add_field(name="Status", value=user.status, inline=True)
-        embed.add_field(name="Highest role", value=user.top_role)
-        embed.add_field(name="Roles", value=len(user.roles))
-        
-        embed.add_field(name="Joined", value=user.joined_at)
-        embed.add_field(name="Created", value=user.created_at)
-        embed.add_field(name="Bot?", value=user.bot)
-        embed.set_thumbnail(url=user.avatar_url)
-        embed.set_author(name=ctx.message.author, icon_url=ctx.message.author.avatar_url)
-        await ctx.send(embed=embed)
-       
+@client.command()
+@commands.has_permissions(ban_members=True)
+async def ban(ctx, user:discord.User=None, *, reason=None):
+  if reason == None:
+    reason = '(none provided)'
+  if user == None:
+    await ctx.send('You forgot to mention a user!')
+  elif user.id == ctx.author.id:
+    await ctx.message.reply("You can't ban yourself moron")
+  else:
+    try:
+      embed = discord.Embed(title='Banned', description='You have been banned from **The Cloud Network**', color=0xFF0000)
+      embed.add_field(name='Moderator:', value=ctx.author)
+      embed.add_field(name='Reason:', value=reason)
+      await user.send(embed=embed)
+      message = f'Successfully banned **{user}** for *{reason}*!'
+    except:
+      message = f'Failed to send message to {user}, but banned anyways.'
+    guild1 = client.get_guild(762659154976047166)
+    guild2 = client.get_guild(798268275167461417)
+    with open('./data/warns.json', 'r') as f:
+      warns = json.load(f)
+      warns[str(user.id)] = 0
+    with open('./data/warns.json', 'w') as f:
+      json.dump(warns, f, indent=4)
+    try:
+      await guild1.ban(user, reason=f'Banned by {ctx.author} for {reason}')
+      await guild2.ban(user, reason=f'Banned by {ctx.author} for {reason}')
+      await ctx.send(message)
+      embed = discord.Embed(title='Ban', color=0xFF0000)
+      embed.add_field(name='Moderator:', value=ctx.author)
+      embed.add_field(name='Reason:', value=reason)
+      embed.set_author(name=user, icon_url=user.avatar_url)
+      channel1 = client.get_channel(857352076565020682)
+      channel2 = client.get_channel(857350753202995210)
+      await channel1.send(embed=embed)
+      await channel2.send(embed=embed)
+    except:
+      await ctx.send(f'An error has occurred and I sadly could not ban **{user}**.')
       
-@bot.command()
-async def avatar(ctx, user: discord.Member=None):
-    """Displays users avatar."""
-    if not user:
-        embed = discord.Embed(color=0x176cd5)
-        embed = discord.Embed(title="View full image.", url=ctx.message.author.avatar_url, color=0x176cd5)
-        embed.set_image(url=ctx.message.author.avatar_url)
-        embed.set_author(name=ctx.message.author, icon_url=ctx.message.author.avatar_url)
-        await ctx.send(embed=embed)
-    
+
+
+@client.command()
+@commands.has_permissions(kick_members=True)
+async def kick(ctx, user:discord.User=None, *, reason=None):
+  if reason == None:
+    reason = '(none provided)'
+  if user == None:
+    await ctx.send('You forgot to mention a user!')
+  elif user.id == ctx.author.id:
+    await ctx.message.reply("You can't kick yourself moron")
+  else:
+    try:
+      embed = discord.Embed(title='Kicked', description='You have been kicked from **The Cloud Network**', color=0xFF0000)
+      embed.add_field(name='Moderator:', value=ctx.author)
+      embed.add_field(name='Reason:', value=reason)
+      await user.send(embed=embed)
+      message = f'Successfully kicked {user} for {reason}!'
+    except:
+      message = f'Failed to send message to {user}, but kicked anyways'
+    guild1 = client.get_guild(762659154976047166)
+    guild2 = client.get_guild(798268275167461417)
+    try:
+      await guild1.kick(user, reason=f'Kicked by {ctx.author} for {reason}')
+      await guild2.kick(user, reason=f'Kicked by {ctx.author} for {reason}')
+      await ctx.send(message)
+      embed = discord.Embed(title='Kick', color=0xFF0000)
+      embed.add_field(name='Moderator:', value=ctx.author)
+      embed.add_field(name='Reason:', value=reason)
+      embed.set_author(name=user, icon_url=user.avatar_url)
+      channel1 = client.get_channel(857352076565020682)
+      channel2 = client.get_channel(857350753202995210)
+      await channel1.send(embed=embed)
+      await channel2.send(embed=embed)
+      try:
+        del db["warns"][str(user.id)]
+      except KeyError:
+        pass
+    except:
+      await ctx.send(f'An error has occurred and i could not kick {user}')  
+
+@client.command(help='Gives the user mentioned a warning. 5 warnings lead to a kick.')
+@commands.has_permissions(kick_members=True)
+async def warn(ctx, member: discord.Member=None, *, reason=None):
+    if member is None:
+        return await ctx.reply("The provided member could not be found or you forgot to provide one.")
+
+    if reason is None:
+        return await ctx.reply("Please provide a reason for warning this user.")
+
+    try:
+        client.warnings[ctx.guild.id][member.id][0] += 1
+        client.warnings[ctx.guild.id][member.id][1].append((ctx.author.id, reason))
+
+    except KeyError:
+        client.warnings[ctx.guild.id][member.id] = [1, [(ctx.author.id, reason)]]
+
+    count = client.warnings[ctx.guild.id][member.id][0]
+
+    async with aiofiles.open(f"./data/{ctx.guild.id}.txt", mode="a") as file:
+        await file.write(f"{member.id} {ctx.author.id} {reason}\n")
+
+ 
+    await ctx.reply(f"Successfully warned **{member}**! They now have **{count}** warning(s).")
+@client.command()
+@commands.has_permissions(kick_members=True)
+async def checkmerits(ctx, user:discord.User=None):
+  if user == None:
+    user = ctx.author
+  try:
+    if user == ctx.author:
+      await ctx.send(f'You have {db["merits"][str(user.id)]} merits')
     else:
-        embed = discord.Embed(color=0x176cd5)
-        embed = discord.Embed(title="View full image.", url=user.avatar_url, color=0x176cd5)
-        embed.set_image(url=user.avatar_url)
-        embed.set_author(name=ctx.message.author, icon_url=ctx.message.author.avatar_url)
-        await ctx.send(embed=embed)
-       
-@bot.command()
-async def diceroll(ctx):
-    responses = ['You rolled a 1!',
-    'You rolled a 2!',
-    'You rolled a 3!',
-    'You rolled a 4!',
-    'You rolled a 5!',
-    'You rolled a 6!',
-    'You rolled a 7!',
-    'You rolled a 8!',
-    'You rolled a 9!']
-    mbed = discord.Embed(
-        title = 'Dice Rolled!',
-        description = f'{random.choice(responses)}'
-    )
-    mbed.set_thumbnail(url='https://images-ext-2.discordapp.net/external/kAegJWUTO1muMX0U5mEKgKSmpHuNl4it6086g2F3pCw/https/gilkalai.files.wordpress.com/2017/09/dice.png?width=80&height=77')
-    await ctx.send(embed=mbed)
-    
+      await ctx.send(f'{user} has {db["merits"][str(user.id)]} merits') 
+  except KeyError:
+    if user == ctx.author:
+      await ctx.send('You have no merits')
+    else:
+      await ctx.send(f'{user} has no merits') 
+      if not ctx.guild_permissions.kick_members:
+        await ctx.send("You do not have permission to run this command.")
 
-@bot.command(aliases=["howgayy"])
-async def howgay(ctx):
-    mbed = discord.Embed(
-        title="howgay machine",
-        description=f'You are {random.randint(1, 100)}% gay.'
+@client.command(help='Clears the warns of the specified user')
+@commands.has_permissions(kick_members=True)
+async def clearwarns(ctx, user:discord.User=None):
+  if user == None:
+    await ctx.message.reply('You forgot to mention a user!')
+  elif user == ctx.author:
+    await ctx.message.reply("Stop trying to remove your own warns moron")
+  else:
+    if db["warns"][str(user.id)] == 0:
+      await ctx.message.reply('User has no warns!')
+    else:
+      channel1 = client.get_channel(857352076565020682)
+      channel2 = client.get_channel(857350753202995210)
+      db["warns"][str(user.id)] = 0
+      await ctx.send(f'Successfully removed warns from {user}!')
 
-    )
-    mbed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Gay_Pride_Flag.svg/640px-Gay_Pride_Flag.svg.png")
-    await ctx.send(embed=mbed)
-  
-   
-@bot.command()
-async def unban(ctx, *, member):
-  if ctx.author.guild_permissions.ban_members:
-    
-   banned_users = await ctx.guild.bans()
-  member_name, member_discriminator = member.split('#')
+      
 
-  for ban_entry in banned_users:
-    user = ban_entry.user
+@client.command()
+async def ping(ctx):
+  await ctx.reply('Pong! :ping_pong:')
+  await ctx.send(f'My current speed is `{round(client.latency * 1000)}ms`.')
 
 
-    if(user.name, user.discriminator) == (member_name, member_discriminator):
-      await ctx.guild.unban(user)
-      await ctx.send(f'Unbanned {member}.')
- 
-  if not ctx.author.guild_permissions.ban_members:
-    await ctx.send("You do not have permission to run this command.")
-    
- 
+@client.command()
+@commands.has_permissions(kick_members=True)
+async def warns(ctx, member: discord.Member=None):
+    if member is None:
+        return await ctx.reply("The provided member could not be found or you forgot to provide one.")
 
+    embed = discord.Embed(title=f"Displaying Warnings for {member.name}", description="", colour=discord.Colour.red())
+    try:
+        i = 1
+        for admin_id, reason in client.warnings[ctx.guild.id][member.id][1]:
+            admin = ctx.guild.get_member(admin_id)
+            embed.description += f"**Warning {i}** given by: {admin.mention} for: *'{reason}'*.\n"
+            i += 1
 
-@bot.command()
+        await ctx.reply(embed=embed)
+
+    except KeyError: 
+        await ctx.reply("This user has no warnings.")
+
+@client.command()
+async def vote(ctx):
+  embed = discord.Embed(title='Voting Links', description='Use these links to upvote/rate the server', color=0xA9CCE3)
+  embed.add_field(name='Links:',value='[Top.gg](https://top.gg/servers/798268275167461417)\n[Disboard](https://disboard.org/server/798268275167461417)\n[Discord.me](https://discord.me/everyone)')
+  embed.set_footer(text='Please rate 5 star or upvote if you enjoy :)')
+  embed.set_author(name="The Chat Cloud", icon_url=ctx.guild.icon_url)
+  await ctx.reply(embed=embed)
+
+for filename in os.listdir('./cogs'):
+  if filename.endswith('.py'):
+    client.load_extension(f'cogs.{filename[:-3]}')
+@client.command()
 async def poll(ctx,*,message):
   emb=discord.Embed(title=f"Poll by {ctx.author.name}", description=f'{message}')
-  msg=await ctx.send(embed=emb)
+  msg=await ctx.reply(embed=emb)
    
-  await msg.add_reaction('ðŸ‘')
-  await msg.add_reaction('ðŸ‘Ž')
-@bot.command()
-async def ask(ctx, *, question):
-    responses = ["It is certain.",
-"It is decidedly so.",
-"Without a doubt.",
-"Yes - definitely.",
-"You may rely on it.",
-"As I see it, yes.",
-"Most likely.",
-"Outlook good.",
-"Yes.",
-"Signs point to yes.",
-"Reply hazy, try again.",
-"Ask again later.",
-"Better not tell you now.",
-"Cannot predict now.",
-"Concentrate and ask again.",
-"Don't count on it.",
-"My reply is no.",
-"My sources say no.",
-"Outlook not so good.",
-"Very doubtful."]
-    await ctx.send(f':8ball: {random.choice(responses)}')
-    
-@bot.command()
+  await msg.add_reaction('👍')
+  await msg.add_reaction('👎')
+@client.command()
 async def cat(ctx):
             response = requests.get('https://aws.random.cat/meow')
             data = response.json()
-            await ctx.send(data['file'])
-            
-
-@bot.command()
-async def dog(ctx):
-            response = requests.get('https://dog.ceo/api/breeds/image/random')
+            await ctx.reply(data['file'])
+@client.command()
+async def dadjoke(ctx):
+     
+        api = 'https://icanhazdadjoke.com/'
+        async with aiohttp.request('GET', api, headers={'Accept': 'text/plain'}) as r:
+            result = await r.text()
+            await ctx.reply(result)
+@client.command()
+async def meme(ctx):
+            response = requests.get('https://meme-api.herokuapp.com/gimme')
             data = response.json()
-            await ctx.send(data['message'])
-           
-@bot.command()
-async def coinflip(ctx):
-        """Flips a coin."""
-        coinsides = ["Heads", "Tails"]
-        await ctx.send(f"**{ctx.author.name}** flipped a coin and got **{random.choice(coinsides)}**!")
-
-@bot.command()
-async def help(ctx, args=None):
-    help_embed = discord.Embed(title="Adurite's Commands")
-    command_names_list = [x.name for x in bot.commands]
-
-    # If there are no arguments, just list the commands:
-    if not args:
-        help_embed.add_field(
-            name="List of supported commands:",
-            value="\n".join([str(i+1)+". "+x.name for i,x in enumerate(bot.commands)]),
-            inline=False
-        )
-        help_embed.add_field(
-            name="Details",
-            value="Type `;help <command name>` for more details about each command.",
-            inline=False
-        )
-
-    # If the argument is a command, get the help text from that command:
-    elif args in command_names_list:
-        help_embed.add_field(
-            name=args,
-            value=bot.get_command(args).help
-        )
-
-    # If someone is just trolling:
-    else:
-        help_embed.add_field(
-            name="Nope.",
-            value="Don't think I got that command, boss!"
-        )
-
-    await ctx.send(embed=help_embed)
-   
-
-@bot.command()
-async def createchannel(ctx, channelName):
-    guild = ctx.guild
-
-    mbed = discord.Embed(
-        title = 'Success',
-        description = "{} has been successfully created.".format(channelName)
-
-    )
-    if ctx.author.guild_permissions.manage_channels:
-        await guild.create_text_channel(name='{}'.format(channelName))
-        await ctx.send(embed=mbed)
-    
-    if not ctx.author.guild_permissions.manage_channels:
-      await ctx.send("You do not have permission to run this command.")
-   
-
-@bot.command()
+            await ctx.reply(data['url'])
+@client.command()
 async def uptime(ctx):
         current_time = time.time()
         difference = int(round(current_time - start_time))
@@ -296,59 +268,20 @@ async def uptime(ctx):
         embed.add_field(name="Uptime", value=text)
         
         try:
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
          
         except discord.HTTPException:
-            await ctx.send("Current uptime: " + text)
-        
-@bot.command()
-async def deletechannel(ctx, channel: discord.TextChannel):
-    mbed = discord.Embed(
-        title = 'Success',
-        description = f'{channel} has been deleted.',
-    )
-    if ctx.author.guild_permissions.manage_channels:
-        await ctx.send(embed=mbed)
-      
-        await channel.delete()
-    if not ctx.author.guild_permissions.manage_channels:
-      await ctx.send("You do not have permission to run this command.")
+            await ctx.reply("Current uptime: " + text)
+@client.command()
+async def members(ctx):
+  mbed = discord.Embed(
+    color=discord.Color(0xffff),
+    title=f'{ctx.guild.name}'
+  )
   
+  mbed.add_field(name='Member Count', value=f'{ctx.guild.member_count}')
+  
+  await ctx.reply(embed=mbed)
 
-@bot.command()
-async def fox(ctx):
-            response = requests.get('https://randomfox.ca/floof/')
-            data = response.json()
-            await ctx.send(data['image'])
-            
-
-
-@bot.command()
-async def mock(ctx, *, message):
-    out = ''.join(random.choice((str.upper, str.lower))(c) for c in message)
-
-    await ctx.send(out)
-@bot.command()
-async def randomnum(ctx):
-    svay = random.randint(1,2000)
-    await ctx.send(f'The random number generated is: **{svay}**')
-@bot.command()
-async def vote(ctx):
-    embed = discord.Embed(
-    title = "Voting for Adurite",
-    description = "We would really appreciate if you voted for Adurite [here](https://top.gg/bot/925509847364010054). Thanks!"
-    )
-    await ctx.send(embed=embed)
-
-
-
-@bot.command()
-async def joke(ctx):
-     
-        api = 'https://icanhazdadjoke.com/'
-        async with aiohttp.request('GET', api, headers={'Accept': 'text/plain'}) as r:
-            result = await r.text()
-            await ctx.send(result)
-
-bot.run("token")
-
+keep_alive()
+client.run(token)
